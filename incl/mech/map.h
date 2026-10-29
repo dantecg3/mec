@@ -6,15 +6,15 @@
 
 #define MAP_EMPTY 0xFFFFFFFFu
 
-void *map_new_impl(usize stride, usize max_entries, MEM_Allocator alloc);
+void *map_new(usize stride, usize max_entries, MEM_Allocator alloc);
 void map_free(void **pmap);
-bool map_put_impl(void *map, uint64 hash, const void *pval, usize val_size);
-void *map_get_impl(void *map, uint64 hash, usize val_size);
+bool map_put(void *map, uint64 hash, const void *pval, usize val_size);
+void *map_get(void *map, uint64 hash, usize val_size);
 usize map_count(void *map);
 
-#define map_new(T, max_entries, alloc) (T*)map_new_impl(sizeof(T), (max_entries), (alloc))
-#define map_put(map, hash, pval) map_put_impl((map), (hash), (const void*)(pval), sizeof(*(pval)))
-#define map_get(map, T, hash) (T*)map_get_impl((map), (hash), sizeof(T))
+#define $map_new(T, max_entries, alloc) (T*)map_new(sizeof(T), (max_entries), (alloc))
+#define $map_put(map, hash, pval) map_put((map), (hash), (const void*)(pval), sizeof(*(pval)))
+#define $map_get(map, T, hash) (T*)map_get((map), (hash), sizeof(T))
 
 #ifdef MECH_IMPL
 typedef struct {
@@ -40,7 +40,7 @@ static inline usize map_round_pow2(usize n)
     return p;
 }
 
-void *map_new_impl(usize stride, usize max_entries, MEM_Allocator alloc)
+void *map_new(usize stride, usize max_entries, MEM_Allocator alloc)
 {
     usize index_capacity = map_round_pow2(max_entries * 2);
 
@@ -50,7 +50,7 @@ void *map_new_impl(usize stride, usize max_entries, MEM_Allocator alloc)
     usize index_offset  = hashes_offset + max_entries * sizeof(uint64);
     usize total         = index_offset + index_capacity * sizeof(uint32);
 
-    byte *block = mem_alloc_bytes(total, alloc);
+    byte *block = $mem_alloc_bytes(total, alloc);
     if (block == NULL) return NULL; // Out_Of_Memory
 
     MAP_Header *header = (MAP_Header*)block;
@@ -73,7 +73,7 @@ void map_free(void **pmap)
 
     MAP_Header *header = map_header(*pmap);
     MEM_Allocator alloc = header->alloc;
-    mem_free(&header, alloc);
+    $mem_free(&header, alloc);
     *pmap = NULL;
 }
 
@@ -106,13 +106,13 @@ static bool map_find(MAP_Header *header, uint64 hash, usize *pentry, usize *pslo
     return false;
 }
 
-bool map_put_impl(void *map, uint64 hash, const void *pval, usize val_size)
+bool map_put(void *map, uint64 hash, const void *pval, usize val_size)
 {
     if (map == NULL) return false;
 
     MAP_Header *header = map_header(map);
 
-    if (header->stride != val_size) panic__("map_put: type T invalid size");
+    if (header->stride != val_size) $panic("map_put: type T invalid size");
 
     usize entry, slot;
     if (!map_find(header, hash, &entry, &slot))
@@ -128,13 +128,13 @@ bool map_put_impl(void *map, uint64 hash, const void *pval, usize val_size)
     return true;
 }
 
-void *map_get_impl(void *map, uint64 hash, usize val_size)
+void *map_get(void *map, uint64 hash, usize val_size)
 {
     if (map == NULL) return NULL;
 
     MAP_Header *header = map_header(map);
 
-    if (header->stride != val_size) panic__("map_get: type T invalid size");
+    if (header->stride != val_size) $panic("map_get: type T invalid size");
 
     usize entry, slot;
     if (!map_find(header, hash, &entry, &slot)) return NULL;

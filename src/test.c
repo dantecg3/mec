@@ -1,46 +1,36 @@
 #define MECH_IMPL
+#include "mech/context.h"
 #include "mech/mem.h"
-#include "mech/co.h"
+#include "mech/log.h"
 
 #include <stdio.h>
 
-typedef struct {
-    const char *name;
-    uint32 wait;
-} Entity;
+static const char *s_level_colors[] = {
+    "\x1b[90m",   // TRACE: gray
+    "\x1b[36m",   // DEBUG: cyan
+    "\x1b[32m",   // INFO:  green
+    "\x1b[33m",   // WARN:  yellow
+    "\x1b[31m",   // ERROR: red
+    "\x1b[1;41m", // FATAL: bold on red background
+};
+#define ANSI_RESET "\x1b[0m"
 
-static void entity_proc(void *arg)
+static void colored_stdout_sink(void *context $unused, LOG_Level level, STR_View msg)
 {
-    Entity *e = (Entity*)arg;
+    printf("%s" SV_FMT ANSI_RESET "\n", s_level_colors[level], $sv_arg(msg));
+}
 
-    printf("%s: spawned\n", e->name);
-
-    for (uint32 i = 0; i < e->wait; ++i) // TODO add co_sleep
-    {
-        printf("%s: waiting %u/%u\n", e->name, i + 1, e->wait);
-        co_yield();
-    }
-
-    printf("%s: done\n", e->name);
+static void context_init(MECH_Context *context, MEM_Allocator allocator)
+{
+    context->allocator = allocator;
+    context->logger.level = LOG_LEVEL_TRACE;
+    context->logger.sink_count = 0;
+    log_add_sink(&context->logger, colored_stdout_sink, NULL);
 }
 
 int main(void)
 {
-    Entity entities[3] = {
-        { "alice", 2 },
-        { "bob",   4 },
-        { "carol", 1 },
-    };
-
-    CO_Co coroutines[3];
-    for (int i = 0; i < 3; ++i)
-    {
-        coroutines[i] = co_spawn(entity_proc, &entities[i], MEM_DEFAULT_ALLOCATOR);
-        if (coroutines[i] == NULL) panic__("failed to alloc couroutines");
-    }
-
-    co_run(coroutines, 3);
-
-    for (int i = 0; i < 3; ++i) co_free(&coroutines[i]);
+    context_init(&s_context, MEM_DEFAULT_ALLOCATOR);
+    $info("Hello, World!");
     return 0;
 }

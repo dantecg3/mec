@@ -2,6 +2,7 @@
 #define MECH_STR_H
 
 #include "base.h"
+#include "range.h"
 
 typedef struct {
     const char *data;
@@ -9,6 +10,7 @@ typedef struct {
 } STR_View;
 
 STR_View str_view(const char *literal);
+STR_View str_view_raw(const char *buffer, usize size);
 STR_View str_view_range(STR_View view, Range range);
 bool str_view_equal(STR_View a, STR_View b);
 bool str_view_starts_with(STR_View view, STR_View prefix);
@@ -20,7 +22,7 @@ STR_View str_view_trim(STR_View view);
 STR_View str_view_chop_by_char(STR_View *view, char cchar);
 
 #define SV_FMT "%.*s"
-#define SV_ARG(sv) (int)(sv).size, (const char*)(sv).data
+#define $sv_arg(sv) (int)(sv).size, (const char*)(sv).data
 #define STR_NOT_FOUND ((usize)-1)
 
 #ifdef MECH_IMPL
@@ -32,9 +34,17 @@ STR_View str_view(const char *literal)
     };
 }
 
+STR_View str_view_raw(const char *buffer, usize size)
+{
+    return (STR_View) {
+        .data = buffer,
+        .size = size
+    };
+}
+
 STR_View str_view_range(STR_View view, Range range)
 {
-    range = range_intersect(range, RANGE(0, view.size));
+    range = range_intersect(range, $range(0, view.size));
     return (STR_View) {
         .data = view.data + range.lo,
         .size = range_len(range)

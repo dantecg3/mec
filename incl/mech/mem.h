@@ -2,6 +2,7 @@
 #define MECH_MEM_H
 
 #include "base.h"
+#include "range.h"
 #include "sys.h"
 
 #define MEM_KB ((usize)1 << 10)
@@ -23,7 +24,7 @@ typedef struct {
     usize stride;
 } MEM_View;
 
-#define mem_view(T, data, count) (MEM_View) {(byte*)data, count, sizeof(T)}
+#define $mem_view(T, data, count) (MEM_View) {(byte*)data, count, sizeof(T)}
 
 typedef void*(*MEM_Alloc_Proc)(void *context, usize size);
 typedef void*(*MEM_Realloc_Proc)(void *context, void *thing, usize new_size);
@@ -47,35 +48,6 @@ void mem_default_free_proc(void *context, void **pthing);
     .realloc_proc = mem_default_realloc_proc, \
     .free_proc = mem_default_free_proc, \
 }
-
-#define mem_new(T, alloc) ({ \
-    MEM_Allocator alloc__ = (alloc); \
-    (alloc__.alloc_proc != NULL) ? (T*)alloc__.alloc_proc(alloc__.context, sizeof(T)) : NULL; \
-})
-
-#define mem_new_array(T, capacity, alloc) ({ \
-    MEM_Allocator alloc__ = (alloc); \
-    (alloc__.alloc_proc != NULL) ? (T*)alloc__.alloc_proc(alloc__.context, sizeof(T) * (capacity)) : NULL; \
-})
-
-#define mem_alloc_bytes(size, alloc) ({ \
-    MEM_Allocator alloc__ = (alloc); \
-    (alloc__.alloc_proc != NULL) ? (byte*)alloc__.alloc_proc(alloc__.context, (size)) : NULL; \
-})
-
-#define mem_realloc_bytes(thing, new_size, alloc) ({ \
-    MEM_Allocator alloc__ = (alloc); \
-    (alloc__.alloc_proc != NULL) ? (byte*)alloc__.realloc_proc(alloc__.context, (thing), (new_size)) : NULL; \
-})
-
-#define mem_free(pthing, allocator) do { \
-    MEM_Allocator alloc__ = (allocator); \
-    void *thing__ = (void*)(*(pthing)); \
-    if (alloc__.free_proc != NULL && thing__ != NULL) \
-    { \
-        alloc__.free_proc(alloc__.context, (void**)(pthing)); \
-    } \
-} while(0)
 
 typedef struct {
     MEM_Slice buffer;
@@ -110,21 +82,21 @@ MEM_Slice mem_slice(void *data, usize size)
 
 MEM_Slice mem_slice_range(MEM_Slice slice, Range range)
 {
-    range = range_intersect(range, RANGE(0, slice.size));
+    range = range_intersect(range, $range(0, slice.size));
     return mem_slice(slice.data + range.lo, range_len(range));
 }
 
-void *mem_default_alloc_proc(void *context, usize size)
+void *mem_default_alloc_proc(void *context $unused, usize size)
 {
     return sys_alloc(size);
 }
 
-void *mem_default_realloc_proc(void *context, void *thing, usize new_size)
+void *mem_default_realloc_proc(void *context $unused, void *thing, usize new_size)
 {
     return sys_realloc(thing, new_size);
 }
 
-void mem_default_free_proc(void *context, void **pthing)
+void mem_default_free_proc(void *context $unused, void **pthing)
 {
     sys_free(pthing);
 }
@@ -168,13 +140,13 @@ static inline void *mem_arena_alloc_proc(void *context, usize size)
     return mem_arena_alloc((MEM_Arena*)context, size);
 }
 
-static inline void *mem_arena_realloc_proc(void *context, void *thing, usize new_size)
+static inline void *mem_arena_realloc_proc(void *context $unused, void *thing $unused, usize new_size $unused)
 {
-    panic__("mem_arena_realloc_proc: invalid operation");
+    $panic("mem_arena_realloc_proc: invalid operation");
     return NULL;
 }
 
-static inline void mem_arena_free_proc(void *context, void **pthing)
+static inline void mem_arena_free_proc(void *context $unused, void **pthing)
 {
     *pthing = NULL;
 }
@@ -212,5 +184,33 @@ usize mem_arena_used(MEM_Arena *arena)
     return (arena != NULL) ? arena->offset : 0;
 }
 
+static inline void *mem_alloc_checked(MEM_Allocator allocator, usize size)
+{
+    if (allocator.alloc_proc == NULL) return NULL;
+    return allocator.alloc_proc(allocator.context, size);
+}
+
+static inline void *mem_realloc_checked(MEM_Allocator allocator, void *thing, usize new_size)
+{
+    if (allocator.realloc_proc == NULL) return NULL;
+    return allocator.realloc_proc(allocator.context, thing, new_size);
+}
+
 #endif // MECH_IMPL
+
+#define $mem_alloc_bytes(size, alloc) ((byte*)mem_alloc_checked((alloc), (size)))
+#define $mem_realloc_bytes(thing, new_size, alloc) ((byte*)mem_realloc_checked((alloc), (thing), (new_size)))
+
+#define $mem_new(T, alloc) ((T*)mem_alloc_checked((alloc), sizeof(T)))
+#define $mem_new_array(T, capacity, alloc) ((T*)mem_alloc_checked((alloc), sizeof(T) * (capacity)))
+
+#define $mem_free(pthing, allocator) do { \
+    MEM_Allocator alloc__ = (allocator); \
+    void *thing__ = (void*)(*(pthing)); \
+    if (alloc__.free_proc != NULL && thing__ != NULL) \
+    { \
+        alloc__.free_proc(alloc__.context, (void**)(pthing)); \
+    } \
+} while(0)
+
 #endif // MECH_MEM_H

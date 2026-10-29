@@ -6,9 +6,9 @@
 
 typedef int (*SORT_Compare_Proc)(const void *target, const void *item);
 
-void *sort_impl(MEM_View view, SORT_Compare_Proc compare, MEM_Allocator alloc);
+void *sort(MEM_View view, SORT_Compare_Proc compare, MEM_Allocator alloc);
 
-#define sort(T, view, compare, alloc) (T*)sort_impl(view, compare, alloc)
+#define $sort(T, view, compare, alloc) (T*)sort(view, compare, alloc)
 
 #ifdef MECH_IMPL
 static byte *sort_item(MEM_View view, usize i)
@@ -70,11 +70,11 @@ static void sort_in_place(MEM_View view, SORT_Compare_Proc compare)
     }
 }
 
-void *sort_impl(MEM_View view, SORT_Compare_Proc compare, MEM_Allocator alloc)
+void *sort(MEM_View view, SORT_Compare_Proc compare, MEM_Allocator alloc)
 {
     usize size = view.count * view.stride;
 
-    byte *sorted = mem_new_array(byte, size, alloc);
+    byte *sorted = $mem_new_array(byte, size, alloc);
     if (sorted == NULL) return NULL; // Out_Of_Memory
 
     memcpy(sorted, view.data, size);

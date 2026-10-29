@@ -32,12 +32,25 @@ typedef intptr_t  intptr;
 typedef float  float32;
 typedef double float64;
 
-#include "range.h"
+#define $cat_(a, b) a##b
+#define $cat(a, b)  $cat_(a, b)
+#define $static_assert(cond, name) enum { $cat($cat(static_assert_, name), $cat(_at_line_, __LINE__)) = 1 / (!!(cond)) }
 
-#define static_assert__(cond, name) typedef char static_assert__##name[(cond) ? 1 : -1]
+#if defined(__GNUC__) || defined(__clang__)
+    #define $unused __attribute__((unused))
+#else
+    #define $unused
+#endif
 
-#define panic__(msg) do { \
-        printf("panic!: %s\n", (msg)); \
+#if defined(_MSC_VER)
+    #define $thread __declspec(thread)
+#else
+    #define $thread __thread
+#endif
+
+#define $panic(msg) do { \
+        fprintf(stderr, "$panic: %s\n", (msg)); \
+        fflush(stderr); \
         abort(); \
      } while(0)
 
@@ -67,7 +80,7 @@ static inline usize align_up(usize size, usize alignment)
 #endif
 
 // 64-bit only
-static_assert__(sizeof(void*) == 8, pointer_is_64_bits);
-static_assert__(sizeof(usize) == 8, usize_is_64_bits);
+$static_assert(sizeof(void*) == 8, pointer_is_64_bits);
+$static_assert(sizeof(usize) == 8, usize_is_64_bits);
 
 #endif // MECH_BASE_H

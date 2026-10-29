@@ -1,16 +1,16 @@
 #ifndef MECH_RANGE_H
+#define MECH_RANGE_H
 
+#include "base.h"
 #include <stdlib.h>
 #include <stdbool.h>
-
-typedef size_t usize;
 
 typedef struct {
     usize lo;
     usize hi;
 } Range;
 
-#define RANGE(lo, hi) (Range) {(lo), (hi)}
+#define $range(lo, hi) (Range) {(lo), (hi)}
 
 static inline Range range(usize lo, usize hi)
 {

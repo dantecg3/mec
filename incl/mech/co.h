@@ -24,7 +24,6 @@ void co_switch(void **from_sp, void *to_sp);
 void *co_init_stack(byte *stack, usize size, void (*entry)(void));
 
 #ifdef MECH_IMPL
-
 #if X86_64__ && (LINUX__ || MACOS__)
     #include "co_sysv_x86_64.h"
 #elif AARCH64__ && (LINUX__ || MACOS__)
@@ -49,8 +48,8 @@ static inline CO_Header *co_header(CO_Co co)
     return (CO_Header*)co;
 }
 
-static CO_Co co_current; // on going coroutine
-static void *co_sched_sp;
+static $thread CO_Co co_current; // on going coroutine
+static $thread void *co_sched_sp;
 
 static void co_entry(void)
 {
@@ -62,15 +61,15 @@ static void co_entry(void)
 
 CO_Co co_spawn(CO_Proc proc, void *arg, MEM_Allocator alloc)
 {
-    if (proc == NULL) panic__("co_spawn: proc is NULL");
+    if (proc == NULL) $panic("co_spawn: proc is NULL");
 
-    CO_Header *header = mem_new(CO_Header, alloc);
+    CO_Header *header = $mem_new(CO_Header, alloc);
     if (header == NULL) return NULL; // Out_Of_Memory
 
-    header->stack = mem_alloc_bytes(CO_STACK_SIZE, alloc);
+    header->stack = $mem_alloc_bytes(CO_STACK_SIZE, alloc);
     if (header->stack == NULL)
     {
-        mem_free(&header, alloc);
+        $mem_free(&header, alloc);
         return NULL; // Out_Of_Memory
     }
 
@@ -88,23 +87,23 @@ void co_free(CO_Co *pco)
     if (*pco == NULL) return;
 
     CO_Header *header = co_header(*pco);
-    if (!header->done) panic__("co_free: coroutine is still alive");
+    if (!header->done) $panic("co_free: coroutine is still alive");
 
     MEM_Allocator alloc = header->alloc;
-    mem_free(&header->stack, alloc);
-    mem_free(&header, alloc);
+    $mem_free(&header->stack, alloc);
+    $mem_free(&header, alloc);
     *pco = NULL;
 }
 
 void co_yield(void)
 {
-    if (co_current == NULL) panic__("co_yield: called outside a coroutine");
+    if (co_current == NULL) $panic("co_yield: called outside a coroutine");
     co_switch(&co_header(co_current)->sp, co_sched_sp);
 }
 
 void co_run(CO_Co *cos, usize count)
 {
-    if (co_current != NULL) panic__("co_run: called from inside a coroutine");
+    if (co_current != NULL) $panic("co_run: called from inside a coroutine");
 
     usize alive = 0;
     for (usize i = 0; i < count; ++i)

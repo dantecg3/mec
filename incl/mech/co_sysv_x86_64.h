@@ -4,7 +4,7 @@
 #include "base.h"
 
 __attribute__((naked, noinline))
-void co_switch(void **from_sp, void *to_sp)
+void co_switch(void **from_sp $unused, void *to_sp $unused)
 {
     __asm__ volatile(
         "pushq %rbp\n"
@@ -30,9 +30,9 @@ void *co_init_stack(byte *stack, usize size, void (*entry)(void))
     uintptr top = ((uintptr)stack + size) & ~(uintptr)15;
 
     void **sp = (void**)top;
-    *--sp = NULL;                                // fake return address for entry
-    *--sp = (void*)entry;                        // popped by the ret in co_switch
-    for (int i = 0; i < 6; ++i) *--sp = NULL;    // rbp rbx r12 r13 r14 r15
+    *--sp = NULL; // fake return address for entry
+    *--sp = (void*)(uintptr)entry; // popped by the ret in co_switch
+    for (int i = 0; i < 6; ++i) *--sp = NULL; // rbp rbx r12 r13 r14 r15
 
     return sp;
 }
