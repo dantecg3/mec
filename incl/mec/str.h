@@ -1,5 +1,5 @@
-#ifndef MECH_STR_H
-#define MECH_STR_H
+#ifndef MEC_STR_H
+#define MEC_STR_H
 
 #include "base.h"
 #include "range.h"
@@ -25,7 +25,7 @@ STR_View str_view_chop_by_char(STR_View *view, char cchar);
 #define $sv_arg(sv) (int)(sv).size, (const char*)(sv).data
 #define STR_NOT_FOUND ((usize)-1)
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 STR_View str_view(const char *literal)
 {
     return (STR_View) {
@@ -122,5 +122,5 @@ STR_View str_view_chop_by_char(STR_View *view, char cchar)
 
     return head;
 }
-#endif // MECH_IMPL
-#endif // MECH_STR_H
+#endif // MEC_IMPL
+#endif // MEC_STR_H

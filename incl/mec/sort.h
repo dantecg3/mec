@@ -1,5 +1,5 @@
-#ifndef MECH_SORT_H
-#define MECH_SORT_H
+#ifndef MEC_SORT_H
+#define MEC_SORT_H
 
 #include "base.h"
 #include "mem.h"
@@ -10,7 +10,7 @@ void *sort(MEM_View view, SORT_Compare_Proc compare, MEM_Allocator alloc);
 
 #define $sort(T, view, compare, alloc) (T*)sort(view, compare, alloc)
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 static byte *sort_item(MEM_View view, usize i)
 {
     return (byte*)view.data + i * view.stride;
@@ -86,5 +86,5 @@ void *sort(MEM_View view, SORT_Compare_Proc compare, MEM_Allocator alloc)
 
     return sorted;
 }
-#endif // MECH_IMPL
-#endif // MECH_SORT_H
+#endif // MEC_IMPL
+#endif // MEC_SORT_H

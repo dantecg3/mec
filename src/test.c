@@ -1,7 +1,7 @@
-#define MECH_IMPL
-#include "mech/context.h"
-#include "mech/mem.h"
-#include "mech/log.h"
+#define MEC_IMPL
+#include "mec/context.h"
+#include "mec/mem.h"
+#include "mec/log.h"
 
 #include <stdio.h>
 
@@ -20,7 +20,7 @@ static void colored_stdout_sink(void *context $unused, LOG_Level level, STR_View
     printf("%s" SV_FMT ANSI_RESET "\n", s_level_colors[level], $sv_arg(msg));
 }
 
-static void context_init(MECH_Context *context, MEM_Allocator allocator)
+static void context_init(MEC_Context *context, MEM_Allocator allocator)
 {
     context->allocator = allocator;
     context->logger.level = LOG_LEVEL_TRACE;

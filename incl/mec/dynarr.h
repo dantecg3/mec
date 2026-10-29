@@ -1,5 +1,5 @@
-#ifndef MECH_DYNARR_H
-#define MECH_DYNARR_H
+#ifndef MEC_DYNARR_H
+#define MEC_DYNARR_H
 
 #include "base.h"
 #include "mem.h"
@@ -17,7 +17,7 @@ usize dynarr_capacity(void *arr);
 #define $dynarr_free(parr) dynarr_free((void**)parr)
 #define $dynarr_append(parr, pval) dynarr_append((void*)(parr), (const void*)(pval), sizeof(*(pval)))
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 typedef struct {
     usize capacity;
     usize stride;
@@ -93,5 +93,5 @@ usize dynarr_capacity(void *arr)
     return arr ? dynarr_header(arr)->capacity : 0;
 }
 
-#endif // MECH_IMPL
-#endif // MECH_DYNARR_H
+#endif // MEC_IMPL
+#endif // MEC_DYNARR_H

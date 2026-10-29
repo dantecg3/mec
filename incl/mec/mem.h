@@ -1,5 +1,5 @@
-#ifndef MECH_MEM_H
-#define MECH_MEM_H
+#ifndef MEC_MEM_H
+#define MEC_MEM_H
 
 #include "base.h"
 #include "range.h"
@@ -71,7 +71,7 @@ usize mem_arena_used(MEM_Arena *arena);
         once__; \
         mem_arena_recover(parena, mark__), once__ = NULL) \
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 MEM_Slice mem_slice(void *data, usize size)
 {
     return (MEM_Slice) {
@@ -196,7 +196,7 @@ static inline void *mem_realloc_checked(MEM_Allocator allocator, void *thing, us
     return allocator.realloc_proc(allocator.context, thing, new_size);
 }
 
-#endif // MECH_IMPL
+#endif // MEC_IMPL
 
 #define $mem_alloc_bytes(size, alloc) ((byte*)mem_alloc_checked((alloc), (size)))
 #define $mem_realloc_bytes(thing, new_size, alloc) ((byte*)mem_realloc_checked((alloc), (thing), (new_size)))
@@ -213,4 +213,4 @@ static inline void *mem_realloc_checked(MEM_Allocator allocator, void *thing, us
     } \
 } while(0)
 
-#endif // MECH_MEM_H
+#endif // MEC_MEM_H

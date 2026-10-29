@@ -1,5 +1,5 @@
-#ifndef MECH_CO_H
-#define MECH_CO_H
+#ifndef MEC_CO_H
+#define MEC_CO_H
 
 // TODO(co):
 // - co_sleep
@@ -23,7 +23,7 @@ void co_run(CO_Co *cos, usize count);
 void co_switch(void **from_sp, void *to_sp);
 void *co_init_stack(byte *stack, usize size, void (*entry)(void));
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 #if X86_64__ && (LINUX__ || MACOS__)
     #include "co_sysv_x86_64.h"
 #elif AARCH64__ && (LINUX__ || MACOS__)
@@ -31,7 +31,7 @@ void *co_init_stack(byte *stack, usize size, void (*entry)(void));
 #elif X86_64__ && WINDOWS__
     #include "co_windows_x86_64.h"
 #else
-    #error "mech co: unsupported platform"
+    #error "mec co: unsupported platform"
 #endif
 
 typedef struct {
@@ -127,5 +127,5 @@ void co_run(CO_Co *cos, usize count)
     }
 }
 
-#endif // MECH_IMPL
-#endif // MECH_CO_H
+#endif // MEC_IMPL
+#endif // MEC_CO_H

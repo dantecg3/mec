@@ -1,5 +1,5 @@
-#ifndef MECH_BASE_H
-#define MECH_BASE_H
+#ifndef MEC_BASE_H
+#define MEC_BASE_H
 
 // STD C99
 
@@ -83,4 +83,4 @@ static inline usize align_up(usize size, usize alignment)
 $static_assert(sizeof(void*) == 8, pointer_is_64_bits);
 $static_assert(sizeof(usize) == 8, usize_is_64_bits);
 
-#endif // MECH_BASE_H
+#endif // MEC_BASE_H

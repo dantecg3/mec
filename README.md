@@ -1,19 +1,19 @@
-# Modern Engine Core Headers
+# Modern Engine Core
 
-Small single-header C modules for engine code. 64-bit only, no dependencies beyond the C standard library.
+Small single-header C library for engine code: memory, strings, logging, coroutines.
 
 Targets GNU C99 (`-std=gnu99`) on GCC and clang. The headers use `__thread`, `__attribute__` and inline asm for coroutines, so strict `-std=c99 -pedantic` will warn.
 
 ## Usage
 
-Define `MECH_IMPL` in exactly one `.c` file before including the headers:
+Define `MEC_IMPL` in exactly one `.c` file before including the headers:
 
 ```c
-#define MECH_IMPL
-#include "mech/context.h"
-#include "mech/mem.h"
-#include "mech/co.h"
-#include "mech/log.h"
+#define MEC_IMPL
+#include "mec/context.h"
+#include "mec/mem.h"
+#include "mec/co.h"
+#include "mec/log.h"
 ```
 
 Every other file includes the headers without the define.

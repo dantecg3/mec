@@ -1,5 +1,5 @@
-#ifndef MECH_MAP_H
-#define MECH_MAP_H
+#ifndef MEC_MAP_H
+#define MEC_MAP_H
 
 #include "base.h"
 #include "mem.h"
@@ -16,7 +16,7 @@ usize map_count(void *map);
 #define $map_put(map, hash, pval) map_put((map), (hash), (const void*)(pval), sizeof(*(pval)))
 #define $map_get(map, T, hash) (T*)map_get((map), (hash), sizeof(T))
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 typedef struct {
     MEM_Allocator alloc;
     uint64 *hashes;
@@ -147,5 +147,5 @@ usize map_count(void *map)
     return map ? map_header(map)->count : 0;
 }
 
-#endif // MECH_IMPL
-#endif // MECH_MAP_H
+#endif // MEC_IMPL
+#endif // MEC_MAP_H

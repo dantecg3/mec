@@ -1,5 +1,5 @@
-#ifndef MECH_RANGE_H
-#define MECH_RANGE_H
+#ifndef MEC_RANGE_H
+#define MEC_RANGE_H
 
 #include "base.h"
 #include <stdlib.h>
@@ -39,4 +39,4 @@ static inline Range range_intersect(Range a, Range b)
     return range(lo, hi);
 }
 
-#endif // MECH_RANGE_H
+#endif // MEC_RANGE_H

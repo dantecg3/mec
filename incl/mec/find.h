@@ -1,5 +1,5 @@
-#ifndef MECH_FIND_H
-#define MECH_FIND_H
+#ifndef MEC_FIND_H
+#define MEC_FIND_H
 
 #include "base.h"
 #include "mem.h"
@@ -8,7 +8,7 @@ typedef int (*FIND_Compare_Proc)(const void *target, const void *item);
 
 void *find_binary_search(MEM_View view, const void *target, FIND_Compare_Proc compare_proc);
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 void *find_binary_search(MEM_View view, const void *target, FIND_Compare_Proc compare_proc)
 {
     if (view.data == NULL || view.count == 0) return NULL;
@@ -31,9 +31,9 @@ void *find_binary_search(MEM_View view, const void *target, FIND_Compare_Proc co
 
     return NULL;
 }
-#endif // MECH_IMPL
+#endif // MEC_IMPL
 
 #define $find_binary_search(T, view, target, compare_proc) \
     (T*)find_binary_search_impl((view), (const void*)(target), (compare_proc))
 
-#endif // MECH_FIND_H
+#endif // MEC_FIND_H

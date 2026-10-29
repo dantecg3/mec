@@ -1,5 +1,5 @@
-#ifndef MECH_CONTEXT_H
-#define MECH_CONTEXT_H
+#ifndef MEC_CONTEXT_H
+#define MEC_CONTEXT_H
 
 #include "mem.h"
 #include "log.h"
@@ -7,14 +7,14 @@
 typedef struct {
     MEM_Allocator allocator;
     LOG_Logger logger;
-} MECH_Context;
+} MEC_Context;
 
-extern $thread MECH_Context s_context;
+extern $thread MEC_Context s_context;
 
-#ifdef MECH_IMPL
-$thread MECH_Context s_context = {0};
+#ifdef MEC_IMPL
+$thread MEC_Context s_context = {0};
 
-#endif // MECH_IMPL
+#endif // MEC_IMPL
 
 #define $log(level, ...) log_fmt(&s_context.logger, level, __VA_ARGS__)
 #define $trace(...) $log(LOG_LEVEL_TRACE, __VA_ARGS__)
@@ -24,4 +24,4 @@ $thread MECH_Context s_context = {0};
 #define $error(...) $log(LOG_LEVEL_ERROR, __VA_ARGS__)
 #define $fatal(...) $log(LOG_LEVEL_FATAL, __VA_ARGS__)
 
-#endif // MECH_CONTEXT_H
+#endif // MEC_CONTEXT_H

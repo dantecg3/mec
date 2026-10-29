@@ -1,5 +1,5 @@
-#ifndef MECH_CO_SYSV_X86_64_H
-#define MECH_CO_SYSV_X86_64_H
+#ifndef MEC_CO_SYSV_X86_64_H
+#define MEC_CO_SYSV_X86_64_H
 
 #include "base.h"
 
@@ -37,4 +37,4 @@ void *co_init_stack(byte *stack, usize size, void (*entry)(void))
     return sp;
 }
 
-#endif // MECH_CO_SYSV_X86_64_H
+#endif // MEC_CO_SYSV_X86_64_H

@@ -1,5 +1,5 @@
-#ifndef MECH_LOG_H
-#define MECH_LOG_H
+#ifndef MEC_LOG_H
+#define MEC_LOG_H
 
 #include "base.h"
 #include "str.h"
@@ -33,7 +33,7 @@ typedef struct {
 bool log_add_sink(LOG_Logger *logger, LOG_Sink_Proc proc, void *context);
 void log_fmt(LOG_Logger *logger, LOG_Level level, const char *fmt, ...);
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 static const char *s_log_level_names[] = {
     "trace", "debug", "info",
     "warn", "error", "fatal"
@@ -72,5 +72,5 @@ void log_fmt(LOG_Logger *logger, LOG_Level level, const char *fmt, ...)
 
     if (level == LOG_LEVEL_FATAL) $panic("log_fmt: fatal log has been called");
 }
-#endif // MECH_IMPL
-#endif // MECH_LOG_H
+#endif // MEC_IMPL
+#endif // MEC_LOG_H

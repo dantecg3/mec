@@ -1,5 +1,5 @@
-#ifndef MECH_SYS_H
-#define MECH_SYS_H
+#ifndef MEC_SYS_H
+#define MEC_SYS_H
 
 #include "base.h"
 
@@ -7,7 +7,7 @@ void *sys_alloc(usize size);
 void *sys_realloc(void *thing, usize new_size);
 void sys_free(void **pthing);
 
-#ifdef MECH_IMPL
+#ifdef MEC_IMPL
 void *sys_alloc(usize size)
 {
     void *thing = malloc(size);
@@ -28,5 +28,5 @@ void sys_free(void **pthing)
     free(*pthing);
     *pthing = NULL;
 }
-#endif // MECH_IMPL
-#endif // MECH_SYS_H
+#endif // MEC_IMPL
+#endif // MEC_SYS_H
