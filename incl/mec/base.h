@@ -92,4 +92,12 @@ static inline usize align_up(usize size, usize alignment)
 $static_assert(sizeof(void*) == 8, pointer_is_64_bits);
 $static_assert(sizeof(usize) == 8, usize_is_64_bits);
 
+#ifdef WINDOWS__
+    #define $export __declspec(dllexport)
+#elif defined(LINUX__) || defined(MACOS__)
+    #define $export __attribute__((visibility("default")))
+#else
+    #error "unsupported platform"
+#endif
+
 #endif // MEC_BASE_H
