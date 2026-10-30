@@ -2,6 +2,10 @@
 #define MEC_BASE_H
 
 // STD C99
+//
+#if defined(__linux__) && !defined(_DEFAULT_SOURCE)
+    #define _DEFAULT_SOURCE
+#endif
 
 #include <stdint.h>
 #include <stdlib.h>

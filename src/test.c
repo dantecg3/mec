@@ -28,14 +28,35 @@ int main(void)
 {
     context_init(&s_context, MEM_DEFAULT_ALLOCATOR);
 
-    uint8 bitset $bitset(10, 8);
+    MEM_Allocator alloc = s_context.allocator;
 
-    $bitset_set(bitset, 10);
-    if ($bitset_has(bitset, 10)) $debug("bit 10 was set");
+    FS_Path_Buffer exec_directory_buffer = fs_exec_directory_path(alloc);
+    if (exec_directory_buffer == NULL) $fatal("failed to get exec directory");
+    FS_Path exec_directory = fs_path(exec_directory_buffer);
+    $trace("proc_path:'"SV_FMT"'\n", $sv_arg(exec_directory));
 
-    $bitset_clear(bitset, 10);
-    if (!$bitset_has(bitset, 10)) $debug("bit 10 was cleared");
+    FS_Path_Buffer libs_path_buffer = fs_path_append(exec_directory, "libs", alloc);
+    FS_Path_Buffer dynlib_path_buffer = fs_path_append(fs_path(libs_path_buffer), "test_dynlib.so", alloc);
 
-    $info("Hello, World!");
+    DYNLIB_Handle dynlib = dynlib_load(fs_path(dynlib_path_buffer));
+    if (dynlib == NULL)
+    {
+        const char *err = dynlib_error();
+        $fatal(
+            "failed to load dynlib '"SV_FMT"':\n %s",
+            $sv_arg(fs_path(dynlib_path_buffer)),
+            err != NULL ? err : "unknown error"
+        );
+    }
+
+    typedef int (*multiply_proc)(int a, int b);
+    multiply_proc mul = $dynlib_symbol(multiply_proc, dynlib, "multiply");
+    if (mul == NULL) $fatal("failed to load 'multiply' symbol");
+
+    int c = mul(2, 3);
+    $info("2 * 3 = %i", c);
+
+    dynlib_close(dynlib);
+
     return 0;
 }

@@ -21,3 +21,8 @@ rm -f "$output"
 cc $flags src/*.c -o "$output"
 
 echo "built $output"
+
+mkdir -p bin/libs
+rm -f bin/libs/test_dynlib.so
+cc -std=c99 -Iincl/ -shared -fPIC src/test_dynlib.c -o bin/libs/test_dynlib.so
+echo "built bin/libs/test_dynlib.so"
