@@ -1,6 +1,4 @@
-#define MEC_IMPL
 #include "mec/mec.h"
-
 #include <stdio.h>
 
 static const char *s_level_colors[] = {

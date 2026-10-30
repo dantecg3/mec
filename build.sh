@@ -18,6 +18,6 @@ echo "building 'test.c' ($mode)"
 
 mkdir -p bin
 rm -f "$output"
-cc $flags src/test.c -o "$output"
+cc $flags src/*.c -o "$output"
 
 echo "built $output"

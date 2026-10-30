@@ -183,6 +183,7 @@ usize mem_arena_used(MEM_Arena *arena)
 {
     return (arena != NULL) ? arena->offset : 0;
 }
+#endif // MEC_IMPL
 
 static inline void *mem_alloc_checked(MEM_Allocator allocator, usize size)
 {
@@ -196,7 +197,6 @@ static inline void *mem_realloc_checked(MEM_Allocator allocator, void *thing, us
     return allocator.realloc_proc(allocator.context, thing, new_size);
 }
 
-#endif // MEC_IMPL
 
 #define $mem_alloc_bytes(size, alloc) ((byte*)mem_alloc_checked((alloc), (size)))
 #define $mem_realloc_bytes(thing, new_size, alloc) ((byte*)mem_realloc_checked((alloc), (thing), (new_size)))
