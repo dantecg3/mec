@@ -32,15 +32,13 @@ typedef intptr_t  intptr;
 typedef float  float32;
 typedef double float64;
 
-#define $cat_(a, b) a##b
-#define $cat(a, b)  $cat_(a, b)
-#define $static_assert(cond, name) enum { $cat($cat(static_assert_, name), $cat(_at_line_, __LINE__)) = 1 / (!!(cond)) }
-
 #if defined(__GNUC__) || defined(__clang__)
     #define $unused __attribute__((unused))
 #else
     #define $unused
 #endif
+
+#define $static_assert(cond, name) typedef char static_assert_failed_##name[(cond) ? 1 : -1] $unused
 
 #if defined(_MSC_VER)
     #define $thread __declspec(thread)
