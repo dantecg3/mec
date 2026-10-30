@@ -2,6 +2,7 @@
 #define MEC_BASE_H
 
 // STD C99
+#define MEC_ENABLE_RUNTIME_ASSERTS
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -38,6 +39,18 @@ typedef double float64;
     #define $unused
 #endif
 
+#define $panic(msg) do { \
+        fprintf(stderr, "[%s:%i] $panic: %s\n", __FILE__, __LINE__, (msg)); \
+        fflush(stderr); \
+        abort(); \
+    } while (0)
+
+#ifdef MEC_ENABLE_RUNTIME_ASSERTS
+    #define $assert(cond, msg) do { if (!(cond)) $panic("assertion failed: [" #cond "] '" msg "'"); } while (0)
+#else
+    #define $assert(cond, msg) ((void)0)
+#endif
+
 #define $static_assert(cond, name) typedef char static_assert_failed_##name[(cond) ? 1 : -1] $unused
 
 #if defined(_MSC_VER)
@@ -45,12 +58,6 @@ typedef double float64;
 #else
     #define $thread __thread
 #endif
-
-#define $panic(msg) do { \
-        fprintf(stderr, "$panic: %s\n", (msg)); \
-        fflush(stderr); \
-        abort(); \
-     } while(0)
 
 static inline usize align_up(usize size, usize alignment)
 {
