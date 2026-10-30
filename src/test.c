@@ -2,6 +2,7 @@
 #include "mec/context.h"
 #include "mec/mem.h"
 #include "mec/log.h"
+#include "mec/bitset.h"
 
 #include <stdio.h>
 
@@ -31,6 +32,15 @@ static void context_init(MEC_Context *context, MEM_Allocator allocator)
 int main(void)
 {
     context_init(&s_context, MEM_DEFAULT_ALLOCATOR);
+
+    uint8 bitset $bitset(10, 8);
+
+    $bitset_set(bitset, 10);
+    if ($bitset_has(bitset, 10)) $debug("bit 10 was set");
+
+    $bitset_clear(bitset, 10);
+    if (!$bitset_has(bitset, 10)) $debug("bit 10 was cleared");
+
     $info("Hello, World!");
     return 0;
 }
