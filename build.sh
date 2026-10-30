@@ -2,7 +2,7 @@
 set -e
 
 mode="${1:-debug}"
-flags="-std=gnu99 -Wall -Wextra -I./incl"
+flags="-std=c99 -Wall -Wextra -pedantic -I./incl"
 
 case "$mode" in
     debug)   flags="$flags -O0 -g" ;;

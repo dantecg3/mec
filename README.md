@@ -2,7 +2,7 @@
 
 Small single-header C library for engine code: memory, strings, logging, coroutines.
 
-Targets GNU C99 (`-std=gnu99`) on GCC and clang. The headers use `__thread`, `__attribute__` and inline asm for coroutines, so strict `-std=c99 -pedantic` will warn.
+Targets C99 (`-std=c99`) on GCC and clang.
 
 ## Usage
 
@@ -14,6 +14,7 @@ Define `MEC_IMPL` in exactly one `.c` file before including the headers:
 #include "mec/mem.h"
 #include "mec/co.h"
 #include "mec/log.h"
+...
 ```
 
 Every other file includes the headers without the define.
@@ -35,5 +36,5 @@ Levels: `$trace`, `$debug`, `$info`, `$warn`, `$error`, `$fatal`. `$fatal` alway
 ## Build
 
 ```sh
-cc -std=gnu99 -Wall -Wextra -I./incl src/test.c -o bin/test
+cc -std=c99 -Wall -Wextra -pedantic -I./incl src/test.c -o bin/test
 ```
