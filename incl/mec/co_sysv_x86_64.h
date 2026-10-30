@@ -4,7 +4,7 @@
 #include "base.h"
 
 __attribute__((naked, noinline))
-void co_switch(void **from_sp $unused, void *to_sp $unused)
+void co_switch(void $unused **from_sp, void $unused *to_sp)
 {
     __asm__ volatile(
         "pushq %rbp\n"

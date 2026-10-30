@@ -86,17 +86,17 @@ MEM_Slice mem_slice_range(MEM_Slice slice, Range range)
     return mem_slice(slice.data + range.lo, range_len(range));
 }
 
-void *mem_default_alloc_proc(void *context $unused, usize size)
+void *mem_default_alloc_proc(void $unused *context, usize size)
 {
     return sys_alloc(size);
 }
 
-void *mem_default_realloc_proc(void *context $unused, void *thing, usize new_size)
+void *mem_default_realloc_proc(void $unused *context, void *thing, usize new_size)
 {
     return sys_realloc(thing, new_size);
 }
 
-void mem_default_free_proc(void *context $unused, void **pthing)
+void mem_default_free_proc(void $unused *context, void **pthing)
 {
     sys_free(pthing);
 }
@@ -140,13 +140,13 @@ static inline void *mem_arena_alloc_proc(void *context, usize size)
     return mem_arena_alloc((MEM_Arena*)context, size);
 }
 
-static inline void *mem_arena_realloc_proc(void *context $unused, void *thing $unused, usize new_size $unused)
+static inline void *mem_arena_realloc_proc(void $unused *context, void $unused *thing, usize $unused new_size)
 {
     $panic("mem_arena_realloc_proc: invalid operation");
     return NULL;
 }
 
-static inline void mem_arena_free_proc(void *context $unused, void **pthing)
+static inline void mem_arena_free_proc(void $unused *context, void **pthing)
 {
     *pthing = NULL;
 }

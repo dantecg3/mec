@@ -1,8 +1,5 @@
 #define MEC_IMPL
-#include "mec/context.h"
-#include "mec/mem.h"
-#include "mec/log.h"
-#include "mec/bitset.h"
+#include "mec/mec.h"
 
 #include <stdio.h>
 
