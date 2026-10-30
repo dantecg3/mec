@@ -2,7 +2,6 @@
 #define MEC_BASE_H
 
 // STD C99
-#define MEC_ENABLE_RUNTIME_ASSERTS
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -12,6 +11,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef uint8_t  uint8;
 typedef uint16_t uint16;
@@ -45,7 +45,7 @@ typedef double float64;
         abort(); \
     } while (0)
 
-#ifdef MEC_ENABLE_RUNTIME_ASSERTS
+#ifdef MEC_RUNTIME_ASSERTS
     #define $assert(cond, msg) do { if (!(cond)) $panic("assertion failed: [" #cond "] '" msg "'"); } while (0)
 #else
     #define $assert(cond, msg) ((void)0)
