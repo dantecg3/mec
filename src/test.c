@@ -24,6 +24,12 @@ static void context_init(MEC_Context *context, MEM_Allocator allocator)
     log_add_sink(&context->logger, colored_stdout_sink, NULL);
 }
 
+ERROR foo(bool the_roses_are_red)
+{
+    if (the_roses_are_red) return error_null();
+    else return error(0x20, "in fact the roses are red");
+}
+
 int main(void)
 {
     context_init(&s_context, MEM_DEFAULT_ALLOCATOR);
@@ -57,6 +63,9 @@ int main(void)
     $info("2 * 3 = %i", c);
 
     dynlib_close(dynlib);
+
+    ERROR err = foo(false);
+    if (!error_is_null(err)) $error("err: "SV_FMT, $sv_arg(err.msg));
 
     return 0;
 }

@@ -7,6 +7,7 @@
 #include "context.h"
 #include "dynarr.h"
 #include "dynlib.h"
+#include "error.h"
 #include "find.h"
 #include "fs.h"
 #include "log.h"
