@@ -20,4 +20,22 @@ static inline COLOR color_rgb(uint8 r, uint8 g, uint8 b)
     return (COLOR){{r, g, b, 255}};
 }
 
+static inline COLOR color_hex(uint32 hex)
+{
+    return (COLOR){{
+        (uint8)((hex >> 16) & 0xFF),
+        (uint8)((hex >> 8) & 0xFF),
+        (uint8)(hex & 0xFF),
+        255
+    }};
+}
+
+static inline void color_as_f32(COLOR color, float32 out[4])
+{
+    out[0] = (float32)color.r / 255.0f;
+    out[1] = (float32)color.g / 255.0f;
+    out[2] = (float32)color.b / 255.0f;
+    out[3] = (float32)color.a / 255.0f;
+}
+
 #endif // MEC_COLOR_H
