@@ -67,5 +67,7 @@ int main(void)
     ERROR err = foo(false);
     if (!error_is_null(err)) $error("err: "SV_FMT, $sv_arg(err.msg));
 
+    COLOR color = color_rgb(255, 0, 255);
+
     return 0;
 }

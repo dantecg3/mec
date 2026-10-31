@@ -4,6 +4,7 @@
 #include "base.h"
 #include "bitset.h"
 #include "co.h"
+#include "color.h"
 #include "context.h"
 #include "dynarr.h"
 #include "dynlib.h"
