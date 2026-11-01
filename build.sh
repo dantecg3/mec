@@ -2,7 +2,7 @@
 set -e
 
 mode="${1:-debug}"
-flags="-std=c99 -Wall -Wextra -pedantic -I./incl"
+flags="-std=c99 -Wall -Wextra -pedantic -I./mec/incl"
 
 case "$mode" in
     debug)   flags="$flags -O0 -g" ;;
@@ -18,11 +18,11 @@ echo "building 'test.c' ($mode)"
 
 mkdir -p bin
 rm -f "$output"
-cc $flags src/*.c -o "$output"
+cc $flags mec/src/*.c -o "$output"
 
 echo "built $output"
 
 mkdir -p bin/libs
 rm -f bin/libs/test_dynlib.so
-cc -std=c99 -Iincl/ -shared -fPIC src/test_dynlib.c -o bin/libs/test_dynlib.so
+cc -std=c99 -I./mec/incl/ -shared -fPIC mec/src/test_dynlib.c -o bin/libs/test_dynlib.so
 echo "built bin/libs/test_dynlib.so"

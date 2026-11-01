@@ -1,0 +1,30 @@
+BasedOnStyle: GNU
+ColumnLimit: 0
+
+SortIncludes:
+  Enabled: false
+
+BreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 1000000
+
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+
+PointerAlignment: Right
+
+BinPackParameters: OnePerLine
+BinPackArguments: false
+AlignAfterOpenBracket: BlockIndent
