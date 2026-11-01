@@ -8,31 +8,31 @@
 typedef struct {
     usize lo;
     usize hi;
-} Range;
+} RANGE;
 
-#define $range(lo, hi) (Range) {(lo), (hi)}
+#define $range(lo, hi) (RANGE) {(lo), (hi)}
 
-static inline Range range(usize lo, usize hi)
+static inline RANGE range(usize lo, usize hi)
 {
-    return (Range) { lo, (hi < lo) ? lo : hi };
+    return (RANGE) { lo, (hi < lo) ? lo : hi };
 }
 
-static inline usize range_len(Range range)
+static inline usize range_len(RANGE range)
 {
     return range.hi - range.lo;
 }
 
-static inline bool range_empty(Range range)
+static inline bool range_empty(RANGE range)
 {
     return range.lo >= range.hi;
 }
 
-static inline bool range_contains(Range range, usize i)
+static inline bool range_contains(RANGE range, usize i)
 {
     return i >= range.lo && i < range.hi;
 }
 
-static inline Range range_intersect(Range a, Range b)
+static inline RANGE range_intersect(RANGE a, RANGE b)
 {
     usize lo = (a.lo > b.lo) ? a.lo : b.lo;
     usize hi = (a.hi < b.hi) ? a.hi : b.hi;

@@ -17,7 +17,7 @@ typedef char* STR_Cstr;
 STR_View str_view(const char *literal);
 STR_View str_view_raw(const char *buffer, usize size);
 STR_View str_view_buffer(STR_Buffer buffer);
-STR_View str_view_range(STR_View view, Range range);
+STR_View str_view_range(STR_View view, RANGE range);
 bool str_view_equal(STR_View a, STR_View b);
 bool str_view_equal_literal(STR_View a, const char *literal);
 bool str_view_starts_with(STR_View view, STR_View prefix);
@@ -70,7 +70,7 @@ STR_View str_view_buffer(STR_Buffer buffer)
     };
 }
 
-STR_View str_view_range(STR_View view, Range range)
+STR_View str_view_range(STR_View view, RANGE range)
 {
     range = range_intersect(range, $range(0, view.size));
     return (STR_View) {

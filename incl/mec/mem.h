@@ -16,7 +16,7 @@ typedef struct {
 } MEM_Slice;
 
 MEM_Slice mem_slice(void *data, usize size);
-MEM_Slice mem_slice_range(MEM_Slice slice, Range range);
+MEM_Slice mem_slice_range(MEM_Slice slice, RANGE range);
 
 typedef struct {
     byte *data;
@@ -80,7 +80,7 @@ MEM_Slice mem_slice(void *data, usize size)
     };
 }
 
-MEM_Slice mem_slice_range(MEM_Slice slice, Range range)
+MEM_Slice mem_slice_range(MEM_Slice slice, RANGE range)
 {
     range = range_intersect(range, $range(0, slice.size));
     return mem_slice(slice.data + range.lo, range_len(range));
