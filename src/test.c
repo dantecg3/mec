@@ -75,5 +75,12 @@ int main (void)
   COLOR color = color_rgb (255, 0, 255);
   uint8 bitset[$bitset (uint8, 10)];
 
+  TIMER timer = {0};
+  while (true)
+    {
+      float64 delta = timer_delta_milis(&timer);
+      $info("delta time: %fs", (float32)delta);
+    }
+
   return 0;
 }

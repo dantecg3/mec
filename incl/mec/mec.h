@@ -18,5 +18,6 @@
 #include "sort.h"
 #include "str.h"
 #include "sys.h"
+#include "timer.h"
 
 #endif // MEC_H

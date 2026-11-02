@@ -1,8 +1,7 @@
 BasedOnStyle: GNU
 ColumnLimit: 0
 
-SortIncludes:
-  Enabled: false
+SortIncludes: false
 
 BreakAfterReturnType: None
 AlwaysBreakAfterDefinitionReturnType: None
@@ -25,6 +24,6 @@ AlignConsecutiveMacros:
 
 PointerAlignment: Right
 
-BinPackParameters: OnePerLine
+BinPackParameters: false
 BinPackArguments: false
 AlignAfterOpenBracket: BlockIndent

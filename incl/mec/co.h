@@ -16,8 +16,8 @@ typedef void (*CO_Proc) (void *arg);
 
 CO_Co co_spawn (CO_Proc proc, void *arg, MEM_Allocator alloc);
 void  co_free (CO_Co *pco);
-void co_yield (void);
-void co_run (CO_Co *cos, usize count);
+void  co_yield (void);
+void  co_run (CO_Co *cos, usize count);
 
 // implemented by platform specific file
 void  co_switch (void **from_sp, void *to_sp);
