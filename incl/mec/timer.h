@@ -24,7 +24,8 @@ float64 timer_delta_seconds (TIMER *ptimer);
 
 void timer_start (TIMER *ptimer)
 {
-  if (ptimer == NULL) return;
+  if (ptimer == NULL)
+    return;
   ptimer->start = timer_now ();
 }
 

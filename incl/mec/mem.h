@@ -22,12 +22,11 @@ MEM_Slice mem_slice_range (MEM_Slice slice, RANGE range);
 typedef struct
 {
   byte *data;
-  usize count;
   usize stride;
+  usize count;
 } MEM_View;
 
-#define $mem_view(T, data, count) \
-  (MEM_View) { (byte *)data, count, sizeof (T) }
+MEM_View mem_view (void *data, usize stride, usize count);
 
 typedef void *(*MEM_Alloc_Proc) (void *context, usize size);
 typedef void *(*MEM_Realloc_Proc) (void *context, void *thing, usize new_size);
@@ -91,6 +90,15 @@ MEM_Slice mem_slice_range (MEM_Slice slice, RANGE range)
 {
   range = range_intersect (range, $range (0, slice.size));
   return mem_slice (slice.data + range.lo, range_len (range));
+}
+
+MEM_View mem_view (void *data, usize stride, usize count)
+{
+  return (MEM_View){
+    .data   = (byte *)data,
+    .stride = stride,
+    .count  = count
+  };
 }
 
 void *mem_default_alloc_proc (void $unused *context, usize size)
@@ -230,5 +238,7 @@ static inline void *mem_realloc_checked (MEM_Allocator allocator, void *thing, u
         }                                                         \
     }                                                             \
   while (0)
+
+#define $mem_view(T, data, count) mem_view ((void *)(data), sizeof (T), count)
 
 #endif // MEC_MEM_H
