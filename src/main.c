@@ -68,7 +68,7 @@ void examples (void)
   // MEM example
   typedef struct
   {
-    int     id;
+    int32   id;
     float32 x, y;
   } Enemy;
 
@@ -79,8 +79,8 @@ void examples (void)
     for (usize i = 0; i < 10; ++i)
       {
         enemies[i] = (Enemy){
-          .id = (int)i,
-          .x  = (float)(i * 10.0f),
+          .id = (int32)i,
+          .x  = (float32)(i * 10.0f),
           .y  = 5.0f
         };
       }
@@ -120,10 +120,10 @@ void examples (void)
   STR_Rune rune;
   usize    non_ascii = 0;
   while (str_iter_next (&iter, &rune))
-  {
-    if (rune > 0x7F)
-      ++non_ascii;
-  }
+    {
+      if (rune > 0x7F)
+        ++non_ascii;
+    }
   $debug ("non-ascii runes: %zu", non_ascii);
 
   STR_C c_str = str_c_new (str_view_from_buffer (buf), s_context.default_allocator);
@@ -131,19 +131,19 @@ void examples (void)
   str_c_free (&c_str);
 
   str_free (&buf);
-  
+
   // MAP
   MAP player_scores = map_new (sizeof (int), 8, s_context.default_allocator);
 
-  int alice_score = 95;
-  int bob_score = 82;
+  int32 alice_score = 95;
+  int32 bob_score   = 82;
 
   $map_put (player_scores, $map_hash_str (str_view ("alice")), &alice_score);
   $map_put (player_scores, $map_hash_str (str_view ("bob")), &bob_score);
 
   $debug ("map count after insertions: %zu", map_count (player_scores));
 
-  int *found_alice = $map_get (int, player_scores, $map_hash_str (str_view ("alice")));
+  int32 *found_alice = $map_get (int, player_scores, $map_hash_str (str_view ("alice")));
   if (found_alice != NULL)
     {
       $debug ("found score for 'alice': %i", *found_alice);
@@ -160,6 +160,29 @@ void examples (void)
     {
       $debug ("map successfully freed and set to NULL");
     }
+
+  // REG + SSET
+  REG  ships = reg_new (4, s_context.default_allocator);
+  SSET fuel  = $sset_new (float, 4, s_context.default_allocator);
+
+  REG_Handle falcon = reg_register (ships);
+  REG_Handle comet  = reg_register (ships);
+
+  float32 tank = 42.5f;
+  $sset_put (fuel, reg_handle_index (falcon), &tank);
+
+  float32 *falcon_fuel = $sset_get (float32, fuel, reg_handle_index (falcon));
+  float32 *comet_fuel  = $sset_get (float32, fuel, reg_handle_index (comet));
+  $debug ("ships: %zu, falcon fuel: %.1f, comet has fuel: %s", reg_count (ships), falcon_fuel != NULL ? *falcon_fuel : 0.0f, comet_fuel != NULL ? "yes" : "no");
+
+  sset_remove (fuel, reg_handle_index (falcon));
+  reg_unregister (ships, falcon);
+
+  REG_Handle nova = reg_register (ships);
+  $debug ("nova reuses falcon's slot: %s, falcon handle still valid: %s", reg_handle_index (nova) == reg_handle_index (falcon) ? "yes" : "no", reg_is_valid_handle (ships, falcon) ? "yes" : "no");
+
+  sset_free (&fuel);
+  reg_free (&ships);
 }
 
 int main (void)

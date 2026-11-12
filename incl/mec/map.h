@@ -6,44 +6,49 @@
 #include "mem.h"
 #include "str.h"
 
-typedef void *MAP;
+typedef void  *MAP;
 typedef uint64 MAP_Hash;
 
 #define MAP_EMPTY 0xFFFFFFFFu
 
 MAP_Hash map_hash (const byte *bytes, usize count);
 
-MAP map_new (usize stride, usize capacity, MEM_Allocator alloc);
-void map_free (MAP *p_map);
-void map_put (MAP map, MAP_Hash hash, const void *p_val, usize val_size);
+MAP   map_new (usize stride, usize capacity, MEM_Allocator alloc);
+void  map_free (MAP *p_map);
+void  map_put (MAP map, MAP_Hash hash, const void *p_val, usize val_size);
 void *map_get (MAP map, MAP_Hash hash, usize val_size);
 usize map_count (MAP map);
 
 #define $map_hash_str(str_view) map_hash ((const byte *)((str_view).data), (str_view).length)
-#define $map_put(map, hash, p_val) do { map_put ((map), (hash), (const void *)(p_val), sizeof (*p_val)); } while (0)
+#define $map_put(map, hash, p_val)                                     \
+  do                                                                   \
+    {                                                                  \
+      map_put ((map), (hash), (const void *)(p_val), sizeof (*p_val)); \
+    }                                                                  \
+  while (0)
 #define $map_get(T, map, hash) (T *)map_get ((map), (hash), sizeof (T))
 
 #ifdef MEC_IMPL
 typedef struct MAP_Header
 {
-  byte *values;
-  MAP_Hash *hashes;
-  uint32 *indices;
-  usize stride;
-  usize capacity;
-  usize count;
+  byte         *values;
+  MAP_Hash     *hashes;
+  uint32       *indices;
+  usize         stride;
+  usize         capacity;
+  usize         count;
   MEM_Allocator alloc;
 } MAP_Header;
 
 static inline usize map_indices_capacity (usize requested_capacity)
 {
-    requested_capacity *= 2;
-    usize capacity = 8;
-    
-    while (capacity < requested_capacity)
-        capacity <<= 1;
-        
-    return capacity;
+  requested_capacity *= 2;
+  usize capacity = 8;
+
+  while (capacity < requested_capacity)
+    capacity <<= 1;
+
+  return capacity;
 }
 
 static inline MAP_Hash map_mix (MAP_Hash hash)
@@ -57,8 +62,8 @@ static inline MAP_Hash map_mix (MAP_Hash hash)
 static bool map_find (MAP_Header *header, MAP_Hash hash, usize *p_index, usize *p_slot)
 {
   usize indices_capacity = map_indices_capacity (header->capacity);
-  usize mask = indices_capacity - 1;
-  usize i    = (usize)map_mix (hash) & mask;
+  usize mask             = indices_capacity - 1;
+  usize i                = (usize)map_mix (hash) & mask;
 
   while (header->indices[i] != MAP_EMPTY)
     {
@@ -78,11 +83,11 @@ static bool map_find (MAP_Header *header, MAP_Hash hash, usize *p_index, usize *
 
 MAP_Hash map_hash (const byte *bytes, usize count)
 {
-  const uint64 FNV_PRIME = 0x100000001b3ull;
+  const uint64 FNV_PRIME        = 0x100000001b3ull;
   const uint64 FNV_OFFSET_BASIS = 0xcbf29ce484222325ull;
 
-  const byte *p = bytes;
-  uint64 hash = FNV_OFFSET_BASIS;
+  const byte *p    = bytes;
+  uint64      hash = FNV_OFFSET_BASIS;
 
   for (usize i = 0; i < count; ++i)
     {
@@ -95,13 +100,13 @@ MAP_Hash map_hash (const byte *bytes, usize count)
 
 MAP map_new (usize stride, usize capacity, MEM_Allocator alloc)
 {
-  usize indices_capacity = map_indices_capacity (capacity); 
+  usize indices_capacity = map_indices_capacity (capacity);
 
   // [HEADER][VALUES][HASHES][INDICES]
-  usize values_offset = sizeof (MAP_Header);
-  usize hashes_offset = align_up (values_offset + stride * capacity, sizeof (uint64));
+  usize values_offset  = sizeof (MAP_Header);
+  usize hashes_offset  = align_up (values_offset + stride * capacity, sizeof (uint64));
   usize indices_offset = hashes_offset + sizeof (uint64) * capacity;
-  usize total = indices_offset + sizeof (uint32) * indices_capacity;
+  usize total          = indices_offset + sizeof (uint32) * indices_capacity;
 
   byte *block = mem_alloc_bytes (total, alloc);
   if (block == NULL)
@@ -111,13 +116,13 @@ MAP map_new (usize stride, usize capacity, MEM_Allocator alloc)
     }
 
   MAP_Header *header = (MAP_Header *)block;
-  header->values = block + values_offset;
-  header->hashes = (MAP_Hash *)(block + hashes_offset);
-  header->indices = (uint32 *)(block + indices_offset);
-  header->stride = stride;
-  header->capacity = capacity;
-  header->count = 0;
-  header->alloc = alloc;
+  header->values     = block + values_offset;
+  header->hashes     = (MAP_Hash *)(block + hashes_offset);
+  header->indices    = (uint32 *)(block + indices_offset);
+  header->stride     = stride;
+  header->capacity   = capacity;
+  header->count      = 0;
+  header->alloc      = alloc;
 
   memset (header->indices, 0xFF, sizeof (uint32) * indices_capacity);
 
@@ -127,8 +132,8 @@ MAP map_new (usize stride, usize capacity, MEM_Allocator alloc)
 void map_free (MAP *p_map)
 {
   $assert (p_map != NULL && *p_map != NULL, "");
-  MAP_Header *header = (MAP_Header *)*p_map;
-  MEM_Allocator alloc = header->alloc;
+  MAP_Header   *header = (MAP_Header *)*p_map;
+  MEM_Allocator alloc  = header->alloc;
   $mem_free (p_map, alloc);
 }
 
@@ -149,7 +154,7 @@ void map_put (MAP map, MAP_Hash hash, const void *p_val, usize val_size)
           return;
         }
 
-      index = header->count++;
+      index                 = header->count++;
       header->hashes[index] = hash;
       header->indices[slot] = (uint32)index;
     }

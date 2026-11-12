@@ -15,5 +15,7 @@
 #include "dynarr.h"
 #include "str.h"
 #include "map.h"
+#include "sset.h"
+#include "reg.h"
 
 #endif // MEC_H
