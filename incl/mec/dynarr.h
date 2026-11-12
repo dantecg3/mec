@@ -2,27 +2,31 @@
 #define MEC_DYNARR_H
 
 #include "base.h"
+#include "context.h"
 #include "mem.h"
 
-#define DYNARR_DEFAULT_CAPACITY 8
-#define DYNARR_DEFAULT_GROW_MUL 2
+#define DYNARR_GROW_MUL 2
 
-void *dynarr_new (usize stride, MEM_Allocator alloc);
-void  dynarr_free (void **parr);
-bool  dynarr_append (void **parr, const void *pval, usize val_size);
-usize dynarr_count (void *arr);
+void *dynarr_new (usize stride, usize capacity, MEM_Allocator alloc);
+void  dynarr_free (void **p_arr);
+void  dynarr_append (void **p_arr, const void *p_val, usize val_size);
+usize dynarr_length (void *arr);
 usize dynarr_capacity (void *arr);
 
-#define $dynarr_new(T, alloc)      (T *)dynarr_new (sizeof (T), alloc)
-#define $dynarr_free(parr)         dynarr_free ((void **)parr)
-#define $dynarr_append(parr, pval) dynarr_append ((void *)(parr), (const void *)(pval), sizeof (*(pval)))
+#define $dynarr_new(T, capacity, alloc) (T *)dynarr_new (sizeof (T), (capacity), (alloc))
+#define $dynarr_append(p_arr, p_val)                                            \
+  do                                                                            \
+    {                                                                           \
+      dynarr_append ((void **)(p_arr), (const void *)(p_val), sizeof (*p_val)); \
+    }                                                                           \
+  while (0)
 
 #ifdef MEC_IMPL
 typedef struct
 {
   usize         capacity;
   usize         stride;
-  usize         count;
+  usize         length;
   MEM_Allocator alloc;
 } DYNARR_Header;
 
@@ -31,73 +35,80 @@ static DYNARR_Header *dynarr_header (void *arr)
   return (DYNARR_Header *)arr - 1;
 }
 
-void *dynarr_new (usize stride, MEM_Allocator alloc)
+void *dynarr_new (usize stride, usize capacity, MEM_Allocator alloc)
 {
-  usize size = sizeof (DYNARR_Header) + stride * DYNARR_DEFAULT_CAPACITY;
+  $assert (stride != 0 && capacity != 0, "");
 
-  DYNARR_Header *header = (DYNARR_Header *)$mem_alloc_bytes (size, alloc);
+  usize          size   = sizeof (DYNARR_Header) + stride * capacity;
+  DYNARR_Header *header = (DYNARR_Header *)mem_alloc_bytes (size, alloc);
+
   if (header == NULL)
-    return NULL; // Out_Of_Memory
-
-  header->capacity = DYNARR_DEFAULT_CAPACITY;
-  header->stride   = stride;
-  header->count    = 0;
-  header->alloc    = alloc;
-
-  return header + 1;
-}
-
-void dynarr_free (void **parr)
-{
-  if (*parr == NULL)
-    return;
-
-  DYNARR_Header *header = dynarr_header (*parr);
-  MEM_Allocator  alloc  = header->alloc;
-  $mem_free (&header, alloc);
-  *parr = NULL;
-}
-
-bool dynarr_append (void **parr, const void *pval, usize val_size)
-{
-  if (*parr == NULL)
-    return false;
-
-  DYNARR_Header *header = dynarr_header (*parr);
-
-  if (header->stride != val_size)
-    $panic ("dynarr_append: type T size invalid");
-
-  if (header->count >= header->capacity)
     {
-      usize capacity = header->capacity * DYNARR_DEFAULT_GROW_MUL;
-      usize size     = sizeof (DYNARR_Header) + header->stride * capacity;
-
-      DYNARR_Header *grown = (DYNARR_Header *)$mem_realloc_bytes (header, size, header->alloc);
-      if (grown == NULL)
-        return false; // Out_Of_Memory, original array untouched
-
-      header           = grown;
-      header->capacity = capacity;
-      *parr            = header + 1;
+      $error_stack_push (error (ERROR_OUT_OF_MEMORY, "failed to allocate a dynarr"));
+      return NULL;
     }
 
-  byte *dest = (byte *)(header + 1) + header->count * header->stride;
-  memcpy (dest, pval, header->stride);
-  header->count++;
+  header->capacity = capacity;
+  header->stride   = stride;
+  header->length   = 0;
+  header->alloc    = alloc;
 
-  return true;
+  return (void *)(header + 1);
 }
 
-usize dynarr_count (void *arr)
+void dynarr_free (void **p_arr)
 {
-  return arr ? dynarr_header (arr)->count : 0;
+  $assert (p_arr != NULL && *p_arr != NULL, "");
+
+  DYNARR_Header *header = dynarr_header (*p_arr);
+  MEM_Allocator  alloc  = header->alloc;
+  $mem_free (&header, alloc);
+  *p_arr = NULL;
+}
+
+void dynarr_append (void **p_arr, const void *p_val, usize val_size)
+{
+  $assert (p_arr != NULL && *p_arr != NULL, "");
+  $assert (p_val != NULL && val_size != 0, "");
+
+  DYNARR_Header *header = dynarr_header (*p_arr);
+  if (val_size != header->stride)
+    {
+      $error_stack_push (error (ERROR_INVALID_ARGUMENT, "failed to append to a dynarr"));
+      return;
+    }
+
+  if (header->length >= header->capacity)
+    {
+      usize new_capacity = header->capacity * DYNARR_GROW_MUL;
+      usize new_size     = sizeof (DYNARR_Header) + new_capacity * header->stride;
+
+      DYNARR_Header *grown = (DYNARR_Header *)mem_realloc_bytes ((byte *)header, new_size, header->alloc);
+      if (grown == NULL)
+        {
+          $error_stack_push (error (ERROR_OUT_OF_MEMORY, "failed to realloc growing a dynarr"));
+          return;
+        }
+
+      header           = grown;
+      header->capacity = new_capacity;
+      *p_arr           = (void *)(header + 1);
+    }
+
+  memcpy ((byte *)*p_arr + header->length * header->stride, p_val, header->stride);
+  header->length++;
+}
+
+usize dynarr_length (void *arr)
+{
+  $assert (arr != NULL, "");
+  return dynarr_header (arr)->length;
 }
 
 usize dynarr_capacity (void *arr)
 {
-  return arr ? dynarr_header (arr)->capacity : 0;
+  $assert (arr != NULL, "");
+  return dynarr_header (arr)->capacity;
 }
-
-#endif // MEC_IMPL
+#endif
 #endif // MEC_DYNARR_H

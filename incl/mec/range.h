@@ -2,43 +2,46 @@
 #define MEC_RANGE_H
 
 #include "base.h"
-#include <stdlib.h>
-#include <stdbool.h>
 
-typedef struct
+typedef struct RANGE RANGE;
+
+struct RANGE
 {
-  usize lo;
-  usize hi;
-} RANGE;
+  usize low;
+  usize high;
+};
 
-#define $range(lo, hi) \
-  (RANGE) { (lo), (hi) }
-
-static inline RANGE range (usize lo, usize hi)
+static inline RANGE range (usize low, usize high)
 {
-  return (RANGE){ lo, (hi < lo) ? lo : hi };
+  return (RANGE){
+    .low  = low,
+    .high = (high < low) ? low : high
+  };
 }
 
-static inline usize range_len (RANGE range)
+static inline RANGE range_to (usize high)
 {
-  return range.hi - range.lo;
+  return (RANGE){
+    .low  = 0,
+    .high = high
+  };
 }
 
-static inline bool range_empty (RANGE range)
+static inline usize range_length (RANGE range)
 {
-  return range.lo >= range.hi;
+  return range.high - range.low;
 }
 
-static inline bool range_contains (RANGE range, usize i)
+static inline bool range_contains (RANGE range, usize index)
 {
-  return i >= range.lo && i < range.hi;
+  return index >= range.low && index < range.high;
 }
 
 static inline RANGE range_intersect (RANGE a, RANGE b)
 {
-  usize lo = (a.lo > b.lo) ? a.lo : b.lo;
-  usize hi = (a.hi < b.hi) ? a.hi : b.hi;
-  return range (lo, hi);
+  usize low  = (a.low > b.low) ? a.low : b.low;
+  usize high = (a.high < b.high) ? a.high : b.high;
+  return range (low, high);
 }
 
 #endif // MEC_RANGE_H

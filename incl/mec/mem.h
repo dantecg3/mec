@@ -1,244 +1,231 @@
-#ifndef MEC_MEM_H
-#define MEC_MEM_H
+#ifndef MEC_MEM
+#define MEC_MEM
 
 #include "base.h"
 #include "range.h"
 #include "sys.h"
 
-#define MEM_KB                ((usize)1 << 10)
-#define MEM_MB                ((usize)1 << 20)
-#define MEM_GB                ((usize)1 << 30)
+#define MEM_KB ((usize)1 << 10)
+#define MEM_MB ((usize)1 << 20)
+#define MEM_GB ((usize)1 << 30)
+
 #define MEM_DEFAULT_ALIGNMENT 16
 
-typedef struct
-{
-  byte *data;
-  usize size;
-} MEM_Slice;
-
-MEM_Slice mem_slice (void *data, usize size);
-MEM_Slice mem_slice_range (MEM_Slice slice, RANGE range);
-
-typedef struct
-{
-  byte *data;
-  usize stride;
-  usize count;
-} MEM_View;
-
-MEM_View mem_view (void *data, usize stride, usize count);
-
+typedef struct MEM_Slice     MEM_Slice;
+typedef struct MEM_View      MEM_View;
+typedef struct MEM_Allocator MEM_Allocator;
 typedef void *(*MEM_Alloc_Proc) (void *context, usize size);
 typedef void *(*MEM_Realloc_Proc) (void *context, void *thing, usize new_size);
-typedef void (*MEM_Free_Proc) (void *context, void **pthing);
+typedef void (*MEM_Free_Proc) (void *context, void **p_thing);
+typedef struct MEM_Arena MEM_Arena;
 
-typedef struct
+struct MEM_Slice
+{
+  const byte *data;
+  usize       size;
+};
+
+static inline MEM_Slice mem_slice (const void *data, RANGE range)
+{
+  return (MEM_Slice){
+    .data = (byte *)data + range.low,
+    .size = range_length (range)
+  };
+}
+
+struct MEM_View
+{
+  const void *data;
+  usize       stride;
+  usize       count;
+};
+
+static inline MEM_View mem_view (const void *data, usize stride, RANGE range)
+{
+  return (MEM_View){
+    .data   = (byte *)data + stride * range.low,
+    .stride = stride,
+    .count  = range_length (range)
+  };
+}
+
+static inline void *mem_view_at (MEM_View view, usize index, usize type_size)
+{
+  $assert (index < view.count, "");
+  $assert (type_size == view.stride, "");
+  return (byte *)view.data + (index * view.stride);
+}
+
+#define $mem_view(T, data, range)    mem_view ((const void *)(data), sizeof (T), (range))
+#define $mem_view_at(T, view, index) ((T *)mem_view_at ((view), (index), sizeof (T)))
+
+struct MEM_Allocator
 {
   void            *context;
   MEM_Alloc_Proc   alloc_proc;
   MEM_Realloc_Proc realloc_proc;
   MEM_Free_Proc    free_proc;
-} MEM_Allocator;
+};
 
-void *mem_default_alloc_proc (void *context, usize size);
-void *mem_default_realloc_proc (void *context, void *thing, usize new_size);
-void  mem_default_free_proc (void *context, void **pthing);
+MEM_Allocator mem_default_allocator ();
 
-#define MEM_INVALID_ALLOCATOR (MEM_Allocator){ 0 }
-#define MEM_DEFAULT_ALLOCATOR                 \
-  (MEM_Allocator)                             \
-  {                                           \
-    .context      = NULL,                     \
-    .alloc_proc   = mem_default_alloc_proc,   \
-    .realloc_proc = mem_default_realloc_proc, \
-    .free_proc    = mem_default_free_proc,    \
-  }
+void *mem_new (usize size, MEM_Allocator alloc);
+void *mem_new_array (usize stride, usize count, MEM_Allocator alloc);
+byte *mem_alloc_bytes (usize count, MEM_Allocator alloc);
+byte *mem_realloc_bytes (byte *thing, usize new_count, MEM_Allocator alloc);
+void  mem_free (void **p_thing, MEM_Allocator alloc);
 
-typedef struct
+#define $mem_new(T, alloc)              ((T *)mem_new (sizeof (T), (alloc)))
+#define $mem_new_array(T, count, alloc) ((T *)mem_new_array (sizeof (T), (count), (alloc)))
+#define $mem_free(p_thing, alloc)       mem_free ((void **)(p_thing), (alloc))
+
+struct MEM_Arena
 {
-  MEM_Slice buffer;
-  usize     alignment;
-  usize     offset;
-} MEM_Arena;
+  byte *buffer;
+  usize size;
+  usize alignment;
+  usize offset;
+};
 
-typedef usize MEM_Arena_Mark;
-
-void          mem_arena_init (MEM_Arena *arena, MEM_Slice backing_buffer, usize alignment);
-void         *mem_arena_alloc (MEM_Arena *arena, usize size);
+MEM_Arena     mem_arena (MEM_Slice buffer, usize alignment);
 MEM_Allocator mem_arena_allocator (MEM_Arena *arena);
 void          mem_arena_clear (MEM_Arena *arena);
+usize         mem_arena_mark (MEM_Arena *arena);
+void          mem_arena_recover (MEM_Arena *arena, usize mark);
 
-MEM_Arena_Mark mem_arena_mark (MEM_Arena *arena);
-void           mem_arena_recover (MEM_Arena *arena, MEM_Arena_Mark mark);
-usize          mem_arena_used (MEM_Arena *arena);
-
-#define MEM_ARENA_SCOPE(parena)                                            \
-  for (MEM_Arena_Mark mark__ = mem_arena_mark (parena), *once__ = &mark__; \
-       once__;                                                             \
-       mem_arena_recover (parena, mark__), once__ = NULL)
+#define $mem_scope_init(size, p_alloc)                                                                        \
+  byte      $uid (buffer__)[(size)] __attribute__ ((aligned (MEM_DEFAULT_ALIGNMENT)));                        \
+  MEM_Arena $uid (arena__) = mem_arena (mem_slice ($uid (buffer__), range_to (size)), MEM_DEFAULT_ALIGNMENT); \
+  *(p_alloc)               = mem_arena_allocator (&$uid (arena__));
 
 #ifdef MEC_IMPL
-MEM_Slice mem_slice (void *data, usize size)
-{
-  return (MEM_Slice){
-    .data = (byte *)data,
-    .size = size
-  };
-}
-
-MEM_Slice mem_slice_range (MEM_Slice slice, RANGE range)
-{
-  range = range_intersect (range, $range (0, slice.size));
-  return mem_slice (slice.data + range.lo, range_len (range));
-}
-
-MEM_View mem_view (void *data, usize stride, usize count)
-{
-  return (MEM_View){
-    .data   = (byte *)data,
-    .stride = stride,
-    .count  = count
-  };
-}
-
-void *mem_default_alloc_proc (void $unused *context, usize size)
+static inline void *mem_default_alloc (void $unused *context, usize size)
 {
   return sys_alloc (size);
 }
 
-void *mem_default_realloc_proc (void $unused *context, void *thing, usize new_size)
+static inline void *mem_default_realloc (void $unused *context, void *thing, usize new_size)
 {
   return sys_realloc (thing, new_size);
 }
 
-void mem_default_free_proc (void $unused *context, void **pthing)
+static inline void mem_default_free (void $unused *context, void **p_thing)
 {
-  sys_free (pthing);
+  sys_free (p_thing);
 }
 
-void mem_arena_init (MEM_Arena *arena, MEM_Slice buffer, usize alignment)
+MEM_Allocator mem_default_allocator ()
 {
-  if (arena == NULL)
-    return;
-  if (alignment == 0)
-    alignment = 1;
+  return (MEM_Allocator){
+    .context      = NULL,
+    .alloc_proc   = mem_default_alloc,
+    .realloc_proc = mem_default_realloc,
+    .free_proc    = mem_default_free
+  };
+}
+
+void *mem_new (usize size, MEM_Allocator alloc)
+{
+  $assert (alloc.alloc_proc, "");
+  return alloc.alloc_proc (alloc.context, size);
+}
+
+void *mem_new_array (usize stride, usize count, MEM_Allocator alloc)
+{
+  $assert (alloc.alloc_proc, "");
+  return alloc.alloc_proc (alloc.context, stride * count);
+}
+
+byte *mem_alloc_bytes (usize count, MEM_Allocator alloc)
+{
+  $assert (alloc.alloc_proc, "");
+  return alloc.alloc_proc (alloc.context, sizeof (byte) * count);
+}
+
+byte *mem_realloc_bytes (byte *thing, usize new_count, MEM_Allocator alloc)
+{
+  $assert (alloc.realloc_proc, "");
+  return alloc.realloc_proc (alloc.context, (void *)thing, sizeof (byte) * new_count);
+}
+
+void mem_free (void **p_thing, MEM_Allocator alloc)
+{
+  $assert (alloc.free_proc, "");
+  alloc.free_proc (alloc.context, p_thing);
+}
+
+MEM_Arena mem_arena (MEM_Slice buffer, usize alignment)
+{
+  $assert (buffer.data != NULL && buffer.size != 0, "");
+  alignment = alignment == 0 ? 1 : alignment;
 
   usize base_addr  = (usize)buffer.data;
   usize align_addr = align_up (base_addr, alignment);
   usize pad        = align_addr - base_addr;
 
-  MEM_Slice aligned_buffer = {
-    .data = buffer.data + pad,
-    .size = (buffer.size > pad) ? buffer.size - pad : 0
-  };
+  $assert (buffer.size > pad, "");
 
-  *arena = (MEM_Arena){
-    .buffer    = aligned_buffer,
+  return (MEM_Arena){
+    .buffer    = (byte *)buffer.data + pad,
+    .size      = buffer.size - pad,
     .alignment = alignment,
     .offset    = 0
   };
 }
 
-void *mem_arena_alloc (MEM_Arena *arena, usize size)
+static inline void *mem_arena_alloc (void *context, usize size)
 {
-  if (arena == NULL || size == 0)
-    return NULL;
+  $assert (context != NULL && size != 0, "");
 
-  usize align_size = align_up (size, arena->alignment);
-  if (align_size > arena->buffer.size - arena->offset)
-    return NULL; // Out_Arena_Memory
+  MEM_Arena *arena = (MEM_Arena *)context;
 
-  void *thing = arena->buffer.data + arena->offset;
-  arena->offset += align_size;
+  usize aligned_size = align_up (size, arena->alignment);
+  $assert (aligned_size <= arena->size - arena->offset, "");
+
+  void *thing = arena->buffer + arena->offset;
+  arena->offset += aligned_size;
 
   return thing;
 }
 
-static inline void *mem_arena_alloc_proc (void *context, usize size)
+static inline void *mem_arena_realloc (void $unused *context, void $unused *thing, usize $unused new_size)
 {
-  return mem_arena_alloc ((MEM_Arena *)context, size);
-}
-
-static inline void *mem_arena_realloc_proc (void $unused *context, void $unused *thing, usize $unused new_size)
-{
-  $panic ("mem_arena_realloc_proc: invalid operation");
+  $panic ("invalid operation - cannot realloc in a arena");
   return NULL;
 }
 
-static inline void mem_arena_free_proc (void $unused *context, void **pthing)
+static inline void mem_arena_free (void $unused *context, void **p_thing)
 {
-  *pthing = NULL;
+  *p_thing = NULL;
 }
 
 MEM_Allocator mem_arena_allocator (MEM_Arena *arena)
 {
-  if (arena == NULL)
-    return MEM_INVALID_ALLOCATOR;
   return (MEM_Allocator){
     .context      = (void *)arena,
-    .alloc_proc   = mem_arena_alloc_proc,
-    .realloc_proc = mem_arena_realloc_proc,
-    .free_proc    = mem_arena_free_proc
+    .alloc_proc   = mem_arena_alloc,
+    .realloc_proc = mem_arena_realloc,
+    .free_proc    = mem_arena_free
   };
 }
 
 void mem_arena_clear (MEM_Arena *arena)
 {
-  if (arena == NULL)
-    return;
+  $assert (arena != NULL, "");
   arena->offset = 0;
 }
 
-MEM_Arena_Mark mem_arena_mark (MEM_Arena *arena)
+usize mem_arena_mark (MEM_Arena *arena)
 {
-  return (arena != NULL) ? arena->offset : 0;
+  $assert (arena != NULL, "");
+  return arena->offset;
 }
 
-void mem_arena_recover (MEM_Arena *arena, MEM_Arena_Mark mark)
+void mem_arena_recover (MEM_Arena *arena, usize mark)
 {
-  if (arena == NULL)
-    return;
+  $assert (arena != NULL, "");
   arena->offset = mark;
 }
 
-usize mem_arena_used (MEM_Arena *arena)
-{
-  return (arena != NULL) ? arena->offset : 0;
-}
 #endif // MEC_IMPL
-
-static inline void *mem_alloc_checked (MEM_Allocator allocator, usize size)
-{
-  if (allocator.alloc_proc == NULL)
-    return NULL;
-  return allocator.alloc_proc (allocator.context, size);
-}
-
-static inline void *mem_realloc_checked (MEM_Allocator allocator, void *thing, usize new_size)
-{
-  if (allocator.realloc_proc == NULL)
-    return NULL;
-  return allocator.realloc_proc (allocator.context, thing, new_size);
-}
-
-#define $mem_alloc_bytes(size, alloc)              ((byte *)mem_alloc_checked ((alloc), (size)))
-#define $mem_realloc_bytes(thing, new_size, alloc) ((byte *)mem_realloc_checked ((alloc), (thing), (new_size)))
-
-#define $mem_new(T, alloc)                 ((T *)mem_alloc_checked ((alloc), sizeof (T)))
-#define $mem_new_array(T, capacity, alloc) ((T *)mem_alloc_checked ((alloc), sizeof (T) * (capacity)))
-
-#define $mem_free(pthing, allocator)                              \
-  do                                                              \
-    {                                                             \
-      MEM_Allocator alloc__ = (allocator);                        \
-      void         *thing__ = (void *)(*(pthing));                \
-      if (alloc__.free_proc != NULL && thing__ != NULL)           \
-        {                                                         \
-          alloc__.free_proc (alloc__.context, (void **)(pthing)); \
-        }                                                         \
-    }                                                             \
-  while (0)
-
-#define $mem_view(T, data, count) mem_view ((void *)(data), sizeof (T), count)
-
-#endif // MEC_MEM_H
+#endif // MEC_MEM

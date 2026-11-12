@@ -2,64 +2,66 @@
 #define MEC_TIMER_H
 
 #include "base.h"
+#include "sys.h"
 
-typedef struct
+typedef struct TIMER TIMER;
+
+struct TIMER
 {
-  uint64 start;
-} TIMER;
+  uint64 start; // ns
+  uint64 snap;  // ns
+};
 
-void    timer_start (TIMER *ptimer);
-uint64  timer_now (void);
-uint64  timer_elapsed (TIMER *ptimer);
-uint64  timer_delta (TIMER *ptimer);
-float64 timer_delta_milis (TIMER *ptimer);
-float64 timer_delta_seconds (TIMER *ptimer);
+static inline TIMER timer ()
+{
+  uint64 now = sys_time_now ();
+  return (TIMER){
+    .start = now,
+    .snap  = now
+  };
+}
+
+uint64  timer_since_start (TIMER *p_timer);
+uint64  timer_elapsed (TIMER *p_timer);
+uint64  timer_delta (TIMER *p_timer);
+float64 timer_delta_milis (TIMER *p_timer);
+float64 timer_delta_seconds (TIMER *p_timer);
 
 #ifdef MEC_IMPL
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 199309L
-#endif
 
-#include <time.h>
-
-void timer_start (TIMER *ptimer)
+uint64 timer_since_start (TIMER *p_timer)
 {
-  if (ptimer == NULL)
-    return;
-  ptimer->start = timer_now ();
+  $assert (p_timer != NULL, "");
+  return sys_time_now () - p_timer->start;
 }
 
-uint64 timer_now (void)
+uint64 timer_elapsed (TIMER *p_timer)
 {
-  struct timespec ts;
-  clock_gettime (CLOCK_MONOTONIC, &ts);
-  return (uint64)ts.tv_sec * 1000000000ull + (uint64)ts.tv_nsec;
+  $assert (p_timer != NULL, "");
+  return sys_time_now () - p_timer->snap;
 }
 
-uint64 timer_elapsed (TIMER *ptimer)
+uint64 timer_delta (TIMER *p_timer)
 {
-  return ptimer != NULL ? timer_now () - ptimer->start : 0;
-}
+  $assert (p_timer != NULL, "");
 
-uint64 timer_delta (TIMER *ptimer)
-{
-  if (ptimer == NULL)
-    return 0;
-  uint64 now    = timer_now ();
-  uint64 delta  = now - ptimer->start;
-  ptimer->start = now;
+  uint64 now    = sys_time_now ();
+  uint64 delta  = now - p_timer->snap;
+  p_timer->snap = now;
+
   return delta;
 }
 
-float64 timer_delta_milis (TIMER *ptimer)
+float64 timer_delta_milis (TIMER *p_timer)
 {
-  return ptimer != NULL ? (float64)timer_delta (ptimer) / 1e6 : 0.0;
+  $assert (p_timer != NULL, "");
+  return (float64)timer_delta (p_timer) / 1e6;
 }
 
-float64 timer_delta_seconds (TIMER *ptimer)
+float64 timer_delta_seconds (TIMER *p_timer)
 {
-  return ptimer != NULL ? (float64)timer_delta (ptimer) / 1e9 : 0.0;
+  $assert (p_timer != NULL, "");
+  return (float64)timer_delta (p_timer) / 1e9;
 }
-
 #endif // MEC_IMPL
 #endif // MEC_TIMER_H
