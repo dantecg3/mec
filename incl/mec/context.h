@@ -7,7 +7,6 @@
 #include "log.h"
 
 typedef struct MEC_Context     MEC_Context;
-typedef struct MEC_Scope       MEC_Scope;
 typedef struct MEC_Error_Stack MEC_Error_Stack;
 
 #define MEC_ERROR_STACK_CAPACITY 256

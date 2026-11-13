@@ -1,6 +1,6 @@
 #include "mec/mec.h"
 
-static const char *s_level_colors[] = {
+static const char *LEVEL_COLORS[] = {
   "\x1b[90m",   // TRACE: gray
   "\x1b[36m",   // DEBUG: cyan
   "\x1b[32m",   // INFO:  green
@@ -12,7 +12,7 @@ static const char *s_level_colors[] = {
 
 static void colored_stdout_sink (void *context $unused, LOG_Level level, const char *msg)
 {
-  printf ("%s%s" ANSI_RESET "\n", s_level_colors[level], msg);
+  printf ("%s%s" ANSI_RESET "\n", LEVEL_COLORS[level], msg);
 }
 
 void examples (void)
@@ -36,9 +36,9 @@ void examples (void)
   $debug ("redf: [r: %f, g: %f, b: %f, a: %f]", redf.r, redf.g, redf.b, redf.a);
 
   // ERROR example
-  ERROR err = error (ERROR_OUT_OF_MEMORY, "some error");
+  ERROR err = error (ERROR_UNKNOWN, "some error");
   if (!error_is_null (err))
-    $error ("something has failed: [0x%2X] %s", err.code, err.msg);
+    $error ("something has failed: ["ERR_FMT"] %s", err.code, err.msg);
 
   ERROR err_null = error_null ();
   if (error_is_null (err_null))
@@ -133,7 +133,7 @@ void examples (void)
   str_free (&buf);
 
   // MAP
-  MAP player_scores = map_new (sizeof (int), 8, s_context.default_allocator);
+  MAP player_scores = map_new (sizeof (int32), 8, s_context.default_allocator);
 
   int32 alice_score = 95;
   int32 bob_score   = 82;
@@ -143,13 +143,13 @@ void examples (void)
 
   $debug ("map count after insertions: %zu", map_count (player_scores));
 
-  int32 *found_alice = $map_get (int, player_scores, $map_hash_str (str_view ("alice")));
+  int32 *found_alice = $map_get (int32, player_scores, $map_hash_str (str_view ("alice")));
   if (found_alice != NULL)
     {
       $debug ("found score for 'alice': %i", *found_alice);
     }
 
-  int *found_missing = $map_get (int, player_scores, $map_hash_str (str_view ("charlie")));
+  int32 *found_missing = $map_get (int32, player_scores, $map_hash_str (str_view ("charlie")));
   if (found_missing == NULL)
     {
       $debug ("'charlie' not found as expected");

@@ -14,12 +14,15 @@ usize dynarr_length (void *arr);
 usize dynarr_capacity (void *arr);
 
 #define $dynarr_new(T, capacity, alloc) (T *)dynarr_new (sizeof (T), (capacity), (alloc))
+#define $dynarr_free(p_arr) do { dynarr_free ((void **)(p_arr)); } while (0)
 #define $dynarr_append(p_arr, p_val)                                            \
   do                                                                            \
     {                                                                           \
       dynarr_append ((void **)(p_arr), (const void *)(p_val), sizeof (*p_val)); \
     }                                                                           \
   while (0)
+#define $dynarr_length(arr) dynarr_length ((void *)(arr))
+#define $dynarr_capacity(arr) dynarr_capacity ((void *)(arr))
 
 #ifdef MEC_IMPL
 typedef struct
