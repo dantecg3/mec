@@ -17,5 +17,6 @@
 #include "map.h"
 #include "sset.h"
 #include "reg.h"
+#include "fs.h"
 
 #endif // MEC_H

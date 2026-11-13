@@ -183,6 +183,56 @@ void examples (void)
 
   sset_free (&fuel);
   reg_free (&ships);
+
+#ifdef WINDOWS__
+  FS_Path p1 = fs_path ("C:\\projects\\game\\assets\\texture.png");
+  FS_Path p2 = fs_path ("relative\\path\\file.txt");
+#else
+  FS_Path p1 = fs_path ("/home/user/projects/game/assets/texture.png");
+  FS_Path p2 = fs_path ("relative/path/file.txt");
+#endif
+  $debug ("p1: '" SV_FMT "'", SV_ARG (p1));
+  $debug ("p2: '" SV_FMT "'", SV_ARG (p2));
+
+  FS_Path parent1 = fs_path_parent (p1);
+  $debug ("p1 parent: " SV_FMT, SV_ARG (parent1));
+
+  FS_Path fname1 = fs_path_filename (p1);
+  $debug ("p1 filename: " SV_FMT, SV_ARG (fname1));
+
+  STR_View ext1 = fs_path_extension (p1);
+  $debug ("p1 extension: " SV_FMT, SV_ARG (ext1));
+
+  FS_Path stem1 = fs_path_stem (p1);
+  $debug ("p1 stem: " SV_FMT, SV_ARG (stem1));
+
+  bool abs1 = fs_path_is_absolute (p1);
+  bool abs2 = fs_path_is_absolute (p2);
+  $debug ("p1 is absolute: %s", abs1 ? "true" : "false");
+  $debug ("p2 is absolute: %s", abs2 ? "true" : "false");
+
+  {
+    $mem_scope_init (10 * MEM_KB, &s_context.temp_allocator);
+    FS_Path_Buffer proc_path      = fs_proc_path (s_context.default_allocator);
+    FS_Path        proc_directory = fs_path_parent (fs_path_from_buffer (proc_path));
+
+    FS_Path_Buffer file_path = fs_path_buffer_new (proc_directory, s_context.default_allocator);
+    fs_path_append (&file_path, str_view ("haystack"));
+    fs_path_append (&file_path, str_view ("neddle.txt"));
+
+    $debug ("loading file: '" SV_FMT "'", SV_ARG (fs_path_from_buffer (file_path)));
+    FS_File file = fs_load_file (fs_path_from_buffer (file_path), s_context.temp_allocator);
+
+    ERROR err = error_null ();
+    while ($error_stack_pop (&err))
+      $error (ERR_FMT " %s", err.code, err.msg);
+
+    if (error_is_null (err) && file.metadata.extension == FS_EXT_TXT)
+      $debug ("file loaded: ##\n%s##", (char *)file.buffer);
+
+    fs_path_buffer_free (&proc_path);
+    fs_path_buffer_free (&file_path);
+  }
 }
 
 int main (void)
